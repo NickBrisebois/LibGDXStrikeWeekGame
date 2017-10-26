@@ -2,21 +2,28 @@ package com.strikeweek.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.*;
 
 public class StrikeWeek extends ApplicationAdapter {
-	SpriteBatch batch;
-	World world;
-	Player player;
+	SpriteBatch batch; // Contains the sprites
+	World world;       // The physics world
+	Player player;	   // The player object
+	WorldObject[] worldObjects = new WorldObject[8]; // Temporary world objects acting as a floor
 
 	@Override
 	public void create () {
+		// The sprite batch contains all of the sprites
 		batch  = new SpriteBatch();
-		player = new Player(100, 100);
-		// This is the world the physics are contained inside for box2d. The vector is the gravity
+
+		// Create the objects used to draw the sprites and their physics bodies
+		player = new Player(100, 400);
+		for(int i=0; i<worldObjects.length; i++){
+			worldObjects[i] = new WorldObject(70*i, 12, "boxAlt.png");
+		}
+
+		// World is contained inside the WorldHolder singleton
 		world = WorldHolder.getWorld();
 	}
 
@@ -26,20 +33,25 @@ public class StrikeWeek extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0, 0, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		//Super basic X axis movement for the player
-		if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
-			player.moveX(-5f);
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
-			player.moveX(5f);
-		}
-
+		// Steps the physics world. Needs to be changed in the future
+		// https://gafferongames.com/post/fix_your_timestep/
 		WorldHolder.getWorld().step(1/60f, 6, 2);
+
+		// player.move contains the keyboard checks for controlling the player
+		player.move();
+
+		// Update the world objects by setting their positions using their body positions
 		player.sprite.setPosition(player.body.getPosition().x, player.body.getPosition().y);
+		for(int i=0; i<worldObjects.length; i++) {
+			worldObjects[i].sprite.setPosition(worldObjects[i].body.getPosition().x, worldObjects[i].body.getPosition().y);
+		}
 
 		// Draws the sprites
 		batch.begin();
 		player.sprite.draw(batch);
+		for(int i=0; i<worldObjects.length; i++) {
+			worldObjects[i].sprite.draw(batch);
+		}
 		batch.end();
 	}
 	
